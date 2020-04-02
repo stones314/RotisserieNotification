@@ -27,17 +27,17 @@ function handlePick(){
   var isCube = true;
   
   //Set number of players here. If this is set to e.g. 6, then only seat 1-6 will be used.
-  var numPlayers = 6;
+  var numPlayers = 8;
 
   //Add player emails here for anyone who wants notification when it is their turn to draft.
   //Has to be in the order of the draft (first email is the first player to pick a card, and so on)
-  //Leave empty ("") if a player do not want notification.
+  //Leave empty ('') if a player do not want notification.
   var emails = ['',
                '',
+               'player_3@somemail.com', //example. This position must be used for the third player
                '',
                '',
-               '',
-               '',
+               'player_6@somemail.com', //and player 6 should be here!
                '',
                ''];
   
@@ -45,10 +45,10 @@ function handlePick(){
   // (false means they only will be notified when it is their turn to pick a card)
   var notifyAll = [false,
                   false,
+                  false, //set this to true if player 3 wants to know whenever anyone makes a pick
                   false,
                   false,
-                  false,
-                  false,
+                  false, //player 6 here
                   false,
                   false];
   
