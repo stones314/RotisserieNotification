@@ -318,7 +318,7 @@ function handlePick(){
       }else if(n > 0){
         infoString += ', '+pickedCardNames[n].toString();
       }else {
-        infoString += ' og '+pickedCardNames[n].toString() + ".";
+        infoString += ' and '+pickedCardNames[n].toString() + ".";
       }
       colors[n] = new Array(1);
       colors[n][0] = playerColor[col-3];
@@ -433,8 +433,8 @@ function handlePick(){
   //Mail to next player:
   if(nextPlayerEmail != ""){
     MailApp.sendEmail(nextPlayerEmail,
-                      'Din tur i Rotisserie draft',
-                      activePlayer+' tok nettopp '+infoString+'\n\nLink:\n'+link+'\n\nCubeTutor:\n'+cubetutor);
+                      'Your turn in Rotisserie Draft',
+                      activePlayer+' just drafted '+infoString+'\n\nLink:\n'+link+'\n\nCubeTutor:\n'+cubetutor);
   }
   
   //Mail to other players about changes:
@@ -442,8 +442,8 @@ function handlePick(){
   for (i = 0; i < 8; i++){
     if (notifyAll[i] && emails[i] != "" && nextPlayerEmail != emails[i] && emails[i] != activePlayerEmail){
       MailApp.sendEmail(emails[i],
-                        'Rotisserie draft oppdatering',
-                        activePlayer+' tok nettopp '+infoString+'\n\n'+nextPlayerName+' er nestemann.\n\nLink:\n'+link+'\n\nCubeTutor:\n'+cubetutor);
+                        'Rotisserie Draft Update',
+                        activePlayer+' just drafted '+infoString+'\n\n'+nextPlayerName+' is next.\n\nLink:\n'+link+'\n\nCubeTutor:\n'+cubetutor);
     }
   }  
 }
