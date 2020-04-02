@@ -140,7 +140,7 @@ function handlePick(){
       var resetCell1 = DraftSheet.getRange("H51");
       if (resetCell1.getValue() == "I want to reset the sheet"){
         infoCell.setBackground(errorColor);
-        infoCell.setValue("Are you sure you want to reset? \"Yes I do\" into cell C52");
+        infoCell.setValue("Are you sure you want to reset? Type \"Yes I do\" into cell C52");
       }
       else
       {
@@ -188,6 +188,10 @@ function handlePick(){
           playerRef[n][0] = DraftSheet.getRange(startRow-1, playerColumn[n]).getValue();
         }
         CardSheet.getRange(19, 10, 8).setValues(playerRef);
+        
+        //Reset the reset
+        resetCell1.setValue("");
+        resetCell2.setValue("");
       }
     }
     
