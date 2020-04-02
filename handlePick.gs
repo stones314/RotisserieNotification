@@ -421,7 +421,7 @@ function handlePick(){
       }else if(n > 0){
         infoString += ', '+pickedCardNames[n].toString();
       }else {
-        infoString += ' og '+pickedCardNames[n].toString() + ".";
+        infoString += ' and '+pickedCardNames[n].toString() + ".";
       }
       colors[n] = new Array(1);
       if (error[n] == 4){
@@ -568,7 +568,6 @@ function handlePick(){
       newColor[n] = new Array(1);
       newColor[n][0] = "white";
     }
-    infoCell.setValue("numCards = " + numCards + ", row = " + row + ", col = " + col);
     DraftSheet.getRange(row-numCards+1, col, numCards).setBackgrounds(newColor);
     
     //Update Next Col/Row info:
