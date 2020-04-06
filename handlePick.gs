@@ -11,221 +11,220 @@
  */
 function handlePick(){
 
-  //************************************
-  //* Things you can change (and probably should change)
-  //************************************
-
   
-  //Link to this sheet and to your cube at cubetutor. Will be included in mail-notifications.
-  // If you dont have cubetutor link, just enter "Nothing to see here..." or something.
-  var link = "link to this sheet, sent to playes when it is their turn to draft";
-  var cubetutor = "https://www.cubetutor.com/viewcube/57513";
+  //********************************************************************************
+  //** SETUP
+  //********************************************************************************
   
-  //If you draft a cube set this to true. The cards in the cube must be added to the Cards tab for this to work.
-  //If you want e.g. Modern Rotisserie, set it to false. In that case the script wont validate card names, only keep track
-  //of whos turn it is to draft. That includes no check if a card was already drafed.
-  var isCube = true;
   
-  //Set number of players here. If this is set to e.g. 6, then only seat 1-6 will be used.
-  var numPlayers = 8;
-
-  //Add player emails here for anyone who wants notification when it is their turn to draft.
-  //Has to be in the order of the draft (first email is the first player to pick a card, and so on)
-  //Leave empty ('') if a player do not want notification.
-  var emails = ['',
-               '',
-               'player_3@somemail.com', //example. This position must be used for the third player
-               '',
-               '',
-               'player_6@somemail.com', //and player 6 should be here!
-               '',
-               ''];
+  var AllSheets = SpreadsheetApp.getActiveSpreadsheet();
+  var SetupSheet = AllSheets.getSheetByName("Setup");
+  var CardSheet = AllSheets.getSheetByName("Cards");
+  var DraftSheet = AllSheets.getSheetByName("Draft");
+  var infoCell = DraftSheet.getRange("C5");
   
-  //For each player, set this to true if that player want notification of all picks made
-  // (false means they only will be notified when it is their turn to pick a card)
-  var notifyAll = [false,
-                  false,
-                  false, //set this to true if player 3 wants to know whenever anyone makes a pick
-                  false,
-                  false,
-                  false, //player 6 here
-                  false,
-                  false];
+  var numPlayers = Number(SetupSheet.getRange("C2").getValue());
+  var isCube = SetupSheet.getRange("C3").getValue();
   
-  //************************************
-  //* Things you might want to change (but it is easier to leave it as is)
-  //************************************
-
-
-  //If you feel like it you can change the background color used for players here.
-  //You must manually update the column headers to match
-  var playerColor = [ "#7cb6eb" //Blue Dark
-                     ,"#b6d7a8" //Green Light
-                     ,"#ffd966" //Yellow
-                     ,"#f7bcd5" //Pink
-                     ,"#81d7eb" //Blue Light
-                     ,"#76af95" //Green Dark
-                     ,"#f9cb9c" //Orange
-                     ,"#af81cf" //Purple
-                    ];
+  var names = ['','','','','','','',''];
+  var emails = ['','','','','','','',''];
+  var notifyTurn  = [false,false,false,false,false,false,false,false];
+  var includeAll  = [false,false,false,false,false,false,false,false];
+  var notifyAll   = [false,false,false,false,false,false,false,false];
+  var notifyFinish= [false,false,false,false,false,false,false,false];
+  var playerColor = [ "#7cb6eb","#b6d7a8","#ffd966","#f7bcd5","#81d7eb","#76af95","#f9cb9c","#af81cf"];
   
-  //The color used when an erraneous card is entered:
-  var errorColor = "#ff0000";
+  var backgrounds = SetupSheet.getRange(9, 4, 8, 1).getBackgrounds();
+  var info = SetupSheet.getRange(9, 2, 8, 7).getValues();
+  for(n = 0; n < 8; n++){
+    names[n] = info[n][0];
+    emails[n] = info[n][1];
+    notifyTurn[n] = info[n][3];
+    includeAll[n] = info[n][4];
+    notifyAll[n] = info[n][5];
+    notifyFinish[n] = info[n][6];
+    playerColor[n] = backgrounds[n][0];
+  }
   
-  //The color used for cells at the start of the draft
-  var defaultColor = "#dddddd";
+  var errorColor = SetupSheet.getRange("B32").getBackground();
+  var draftColor = SetupSheet.getRange("B33").getBackground();
+  var defaultColor = SetupSheet.getRange("B34").getBackground();
+  var unusedColor = SetupSheet.getRange("B35").getBackground();
+  var cardHeaderColor = SetupSheet.getRange("B36").getBackground();
   
-  //The color used for cells that shall not be used
-  var unusedColor = "#333333";
-
-  //************************************
-  //* You might also want to change these, but these are a bit complicated.
-  //* ! Might lead to bugs if not changed correctly !
-  //************************************
+  var notifyTurnSubject = SetupSheet.getRange("B20").getValue();
+  var notifyAllSubject = SetupSheet.getRange("B21").getValue();
+  var notifyFinishSubject = SetupSheet.getRange("B22").getValue();
+  var sheetLink = '\n\nLink:\n'+SetupSheet.getRange("B23").getValue();
+  var cube = SetupSheet.getRange("B24").getValue()
+  var cubeLink = '';
+  if (cube != '')
+    cubeLink = '\n\nCube:\n'+cube;
+  var and = SetupSheet.getRange("C26").getValue();
+  var sinceLast = SetupSheet.getRange("C27").getValue();
+  var isNext = SetupSheet.getRange("C28").getValue();
+  var justPicked = SetupSheet.getRange("C29").getValue();
   
-
-  // These parameters can be used to change the "draft area" in the Draft sheet.
-  // E.g. if you want to draft more cards, lastRow should be increased.
-  // If you want to start picking two cards at a different time, twoCardRow should be incresed.
-  // Don't change the startRow, it will mess things up probably...
+  var errorForgot = SetupSheet.getRange("D50").getValue();
+  var errorSameCard = SetupSheet.getRange("D51").getValue();
+  var errorNotFound = SetupSheet.getRange("D52").getValue();
+  var errorAlreadyTaken = SetupSheet.getRange("D53").getValue();
+  var errorIsHeading = SetupSheet.getRange("D54").getValue();
+  var errorMaybeReenter = SetupSheet.getRange("D55").getValue();
+  var errorOKReenter = SetupSheet.getRange("D56").getValue();
+  
+  var cardsDrafted = Number(SetupSheet.getRange("C4").getValue());
+  var twoCardPick = SetupSheet.getRange("C5").getValue();
   
   //Row in sheet where the first card is drafted. This has to be an odd number! (script uses odd/even to check if we go left or right)
   var startRow = 7;
   
   //Row in sheet where we start picking two cards (the topmost of the two rows)
-  //This has to be a row that, if we did not change to two cards, we would go from
-  //left to right picking one card.
-  //I have not tested what happens if twoCardRow > lastRow, assume it will lead to various bugs
-  var twoCardRow = 21;
+  var twoCardRow = 50;
+  if (twoCardPick != "Never")
+    twoCardRow = startRow + Number(twoCardPick) - 1;
   
   //Row in sheet where the last pick is made.
-  var lastRow = 40;
+  var lastRow = startRow + cardsDrafted - 1;
   
   //Column in the sheet where each player is making their picks
   var playerColumn = [3,4,5,6,7,8,9,10];
 
   // These numbes are used to limit the search for card-names in the Cards Tab.
-  // If you have a lot of cards in your cube, these might need to be increased.
-  // maxCol is the number of columns. If set to 8 it will look in the first 8 columns.
-  // maxRow is the number or rows. If set to 150 it will look in the first 150 rows.
-  // Ignore these if you are not drafting a cube.
-  var maxCol = 8, maxRow = 150;
+  var maxCol = 8;
+  var maxRow = Number(SetupSheet.getRange("B40").getValue());
 
-  //************************************
-  //* Dont mess around below here unless you know what you are doing!
-  //************************************
-
-
-  var AllSheets = SpreadsheetApp.getActiveSpreadsheet();
-  var CardSheet = AllSheets.getSheetByName("Cards");
-  var DraftSheet = AllSheets.getSheetByName("Draft");
+  //***************************************************************************************
+  //** Logic for setting up sheet:
+  //***************************************************************************************
   
+
+  var resetCells = SetupSheet.getRange(44, 2, 3).getValues();
+  if (resetCells[0][0] && resetCells[1][0] && resetCells[2][0])
+  {
+    //DraftSheet:
+    infoCell.setBackground("white");
+    infoCell.setValue("");
+    var ncCell = DraftSheet.getRange("C51");
+    ncCell.setValue(playerColumn[0]);
+    var nrCell = DraftSheet.getRange("C52");
+    nrCell.setValue(startRow);
+    var npCell = DraftSheet.getRange("C2");
+    npCell.setValue(names[0]);
+    npCell.setBackground(playerColor[0]);
+    var pickInfoCell = DraftSheet.getRange("E4");
+    if (twoCardRow < lastRow)
+      pickInfoCell.setValue("You will make " + cardsDrafted +" picks each. Starting with pick " + twoCardPick + " each player will pick two cards at once.");
+    else
+      pickInfoCell.setValue("You will make " + cardsDrafted +" picks each.");
+    DraftSheet.getRange(startRow, playerColumn[0], lastRow-startRow+1, numPlayers).setBackground(defaultColor);
+    DraftSheet.getRange(startRow, playerColumn[0], lastRow-startRow+1, 8).setValue("");
+    DraftSheet.getRange(startRow, playerColumn[0]).setBackground(draftColor);
+    if (numPlayers < 8)
+    {
+      DraftSheet.getRange(startRow, playerColumn[numPlayers], lastRow-startRow+1, 8-numPlayers).setBackground(unusedColor);
+    }
+    if (lastRow < 42)
+    {
+      DraftSheet.getRange(lastRow+1, playerColumn[0], 48-lastRow, 8).setBackground(unusedColor);
+    }
+    var headersText = DraftSheet.getRange(startRow-1, playerColumn[0],1,8).getValues();
+    var headersBack = DraftSheet.getRange(startRow-1, playerColumn[0],1,8).getBackgrounds();
+    for (n = 0; n < 8; n++)
+    {
+      headersText[0][n] = names[n];
+      headersBack[0][n] = playerColor[n];
+    }
+    DraftSheet.getRange(startRow-1, playerColumn[0],1,8).setValues(headersText);
+    DraftSheet.getRange(startRow-1, playerColumn[0],1,8).setBackgrounds(headersBack);
+    DraftSheet.getRange(startRow, 13, 32, 2).setValue("");
+
+    
+    //CardSheet:
+    var CubeCardBack = CardSheet.getRange(1, 1, maxRow, maxCol).getBackgrounds();
+    var r=0,c=0,n=0;
+    for(r = 0; r< maxRow; r++){
+      for (c = 0; c < maxCol; c++){
+        for(n = 0; n < 8; n++){
+          if(CubeCardBack[r][c] != cardHeaderColor)
+          {
+            CubeCardBack[r][c] = "white";
+          }
+        }
+      }
+    }
+    CardSheet.getRange(1, 1, maxRow, maxCol).setBackgrounds(CubeCardBack);
+    var playerRef = CardSheet.getRange(19, 10, 8).getValues();
+    var playerRefBG = CardSheet.getRange(19, 10, 8).getBackgrounds();
+    for(n = 0; n < 8; n++){
+      playerRef[n][0] = names[n];
+      playerRefBG[n][0] = playerColor[n];
+    }
+    CardSheet.getRange(19, 10, 8).setValues(playerRef);
+    CardSheet.getRange(19, 10, 8).setBackgrounds(playerRefBG);
+    CardSheet.getRange("J3").setValue(cube);
+    
+    //SetupSheet:
+    resetCells[0][0] = false;
+    resetCells[1][0] = false;
+    resetCells[2][0] = false;
+    SetupSheet.getRange(44, 2, 3).setValues(resetCells);
+  }
+
+
+  //*****************************************************************************
+  //* Logic for checking validity of cards drafted
+  //*****************************************************************************
+  
+
+  //get col/row that was edited now:  
   var cell = DraftSheet.getActiveCell();
-  
-  //Cell used to give error messages:
-  var infoCell = DraftSheet.getRange("C5");
+  var col = cell.getColumn();
+  var row = cell.getRow();
 
-  //Get next col/row that shall trigger email notification
+  //Get next col/row that shall trigger script:
   var nextCol = DraftSheet.getSheetValues(51, 3, 1, 1)[0][0];
   var nextRow = DraftSheet.getSheetValues(52, 3, 1, 1)[0][0];
     
-  var col = cell.getColumn();
-  var row = cell.getRow();
-  
-  //Check which cell was edited:
+  //Check if the correct cell was edited:
   if(nextCol != col || nextRow != row)
   {
-    //Check for command to reset sheet
-    if (col == 8 && row == 51){
-      var resetCell1 = DraftSheet.getRange("H51");
-      if (resetCell1.getValue() == "I want to reset the sheet"){
-        infoCell.setBackground(errorColor);
-        infoCell.setValue("Are you sure you want to reset? Type \"Yes I do\" into cell C52");
-      }
-      else
-      {
-        infoCell.setBackground("white");
-        infoCell.setValue("");
-      }
-    }
-    else if (col == 8 && row == 52){
-      var resetCell1 = DraftSheet.getRange("H51");
-      var resetCell2 = DraftSheet.getRange("H52");
-      if (resetCell1.getValue() == "I want to reset the sheet" && resetCell2.getValue() == "Yes I do"){
-        //RESET STUFF!
-        //DraftSheet first:
-        infoCell.setBackground("white");
-        infoCell.setValue("");
-        var ncCell = DraftSheet.getRange("C51");
-        ncCell.setValue(playerColumn[0]);
-        var nrCell = DraftSheet.getRange("C52");
-        nrCell.setValue(startRow);
-        var npCell = DraftSheet.getRange("C2");
-        npCell.setValue(DraftSheet.getSheetValues(startRow-1, playerColumn[0], 1, 1)[0][0]);
-        npCell.setBackground(playerColor[0]);
-        DraftSheet.getRange(startRow, playerColumn[0], lastRow-startRow+1, numPlayers).setBackground(defaultColor);
-        DraftSheet.getRange(startRow, playerColumn[0], lastRow-startRow+1, 8).setValue("");
-        DraftSheet.getRange(startRow, playerColumn[0]).setBackground("white");
-        if (numPlayers < 8){
-          DraftSheet.getRange(startRow, playerColumn[numPlayers], lastRow-startRow+1, 8-numPlayers).setBackground(unusedColor);
-        }
-        
-        //CardSheet:
-        var CubeCardBack = CardSheet.getRange(1, 1, maxRow, maxCol).getBackgrounds();
-        var r=0,c=0,n=0;
-        for(r = 0; r< maxRow; r++){
-          for (c = 0; c < maxCol; c++){
-            for(n = 0; n < 8; n++){
-              if(CubeCardBack[r][c] == playerColor[n]){
-                CubeCardBack[r][c] = "white";
-              }
-            }
-          }
-        }
-        CardSheet.getRange(1, 1, maxRow, maxCol).setBackgrounds(CubeCardBack);
-        var playerRef = CardSheet.getRange(19, 10, 8).getValues();
-        for(n = 0; n < 8; n++){
-          playerRef[n][0] = DraftSheet.getRange(startRow-1, playerColumn[n]).getValue();
-        }
-        CardSheet.getRange(19, 10, 8).setValues(playerRef);
-        
-        //Reset the reset
-        resetCell1.setValue("");
-        resetCell2.setValue("");
-      }
-    }
-    
-    return;//only continue if change was made in the right cell
+    return; //Incorrect cell edited. Script ends with no further actions.
   }
   
-  //Handle multiple picks in a row by the same player (up to 4!)
+  //An edit has been made in the correct cell! Now we must figure out what
+  //cards were selected, and check if these cards are OK.
+  
+  //Handle multiple picks in a row by the same player (up to 4)
   //Make a list of the cards picked:
-  var numCards = 1;
+  var numCardsPicked = 1;
   if (row == lastRow && col == playerColumn[0])
   {
-    numCards = 2;
+    numCardsPicked = 2;
+    if (twoCardRow > lastRow)
+      numCardsPicked = 1;
   }
   else if (row > startRow && row < twoCardRow){
     if (col == playerColumn[0] || col == playerColumn[numPlayers-1]){
-      numCards = 2;
+      numCardsPicked = 2;
     }
   }
   else if (row == twoCardRow+1 && col == playerColumn[0])
   {
-    numCards = 3;
+    numCardsPicked = 3;
   }
   else if (row >= twoCardRow && row <= lastRow)
   {
     if (col==playerColumn[0] || col ==playerColumn[numPlayers-1]){
-      numCards = 4;
+      numCardsPicked = 4;
     }
     else if (col > playerColumn[0] && col < playerColumn[numPlayers-1])
     {
-      numCards = 2;
+      numCardsPicked = 2;
     }
   }
   
-  var pickedCards = DraftSheet.getRange(row-numCards+1, col, numCards);
+  var pickedCards = DraftSheet.getRange(row-numCardsPicked+1, col, numCardsPicked);
   var pickedCardNames = pickedCards.getValues();
   var infoString = "";
   
@@ -241,7 +240,7 @@ function handlePick(){
     var cardPoolNames = cardPool.getValues();
     var cardPoolBackColor = cardPool.getBackgrounds();
     
-    for(n = numCards-1; n >= 0; n--)
+    for(n = numCardsPicked-1; n >= 0; n--)
     {
       if(pickedCardNames[n].toString() == "")
       {
@@ -263,7 +262,7 @@ function handlePick(){
       }
       for(r = 0; r < maxRow; r++)
       {
-        for (n = numCards-1; n >= 0; n--)
+        for (n = numCardsPicked-1; n >= 0; n--)
         {
           if(cardRow[n] > 0)//we already found this card...
           {
@@ -292,7 +291,7 @@ function handlePick(){
         }
       }
       var done = 1;
-      for(n = numCards-1; n >= 0; n--)
+      for(n = numCardsPicked-1; n >= 0; n--)
       {
         if (cardRow[n] < 0)
         {
@@ -306,8 +305,8 @@ function handlePick(){
       }
     }
     
-    var colors = new Array(numCards);
-    for(n = numCards-1; n >= 0; n--)
+    var colors = new Array(numCardsPicked);
+    for(n = numCardsPicked-1; n >= 0; n--)
     {
       colors[n] = new Array(1);
       colors[n][0] = playerColor[col-3];
@@ -315,14 +314,14 @@ function handlePick(){
     
     var allGood = 1;
     var errorInfo = "";
-    for(n = numCards-1; n >= 0; n--)
+    for(n = numCardsPicked-1; n >= 0; n--)
     {
-      if(n == numCards-1){
+      if(n == numCardsPicked-1){
         infoString += pickedCardNames[n].toString();
       }else if(n > 0){
         infoString += ', '+pickedCardNames[n].toString();
       }else {
-        infoString += ' and '+pickedCardNames[n].toString();
+        infoString += ' '+and+' '+pickedCardNames[n].toString();
       }
       if (n == 0)
         infoString += ".";
@@ -330,19 +329,19 @@ function handlePick(){
       if(error[n] == 4)
       {
         colors[n][0] = errorColor;
-        errorInfo += "You forgot to enter a card. ";
+        errorInfo += errorForgot +". ";
         allGood = 0;
       }
       else if(error[n] == 5)
       {
         colors[n][0] = errorColor;
-        errorInfo += "You can't pick the same card twize. ";
+        errorInfo += errorSameCard +". ";
         allGood = 0;
       }
       else if(cardRow[n] < 0)
       {
         colors[n][0] = errorColor;
-        errorInfo += pickedCardNames[n].toString() + " was not found in cardlist (spelling/case?). ";
+        errorInfo += pickedCardNames[n].toString() + " "+errorNotFound +". ";
         allGood = 0;
         error[n] = 2;
       }
@@ -351,37 +350,36 @@ function handlePick(){
         var pn = error[n] - 10;
         var name = DraftSheet.getSheetValues(6, pn+3, 1, 1)[0][0].toString();
         colors[n][0] = errorColor;
-        errorInfo += pickedCardNames[n].toString() + " is already picked by " + name + ". ";
+        errorInfo += pickedCardNames[n].toString() + " "+ errorAlreadyTaken +" " + name + ". ";
         allGood = 0;
       }
       else if(error[n] == 2)
       {
         colors[n][0] = errorColor;
-        errorInfo += pickedCardNames[n].toString() + " is a heading, not a card. ";
+        errorInfo += pickedCardNames[n].toString() + " "+errorIsHeading +". ";
         allGood = 0;
       }
     }
   
     if (allGood == 0)
     {
-      if (error[numCards-1] == 0)
+      if (error[numCardsPicked-1] == 0)
       {
-        colors[numCards-1][0] = errorColor;
-        errorInfo += " " + pickedCardNames[numCards-1].toString()+" was OK, but must be reentered (to trigger script update...)";
+        colors[numCardsPicked-1][0] = errorColor;
+        errorInfo += " " + pickedCardNames[numCardsPicked-1].toString()+" "+errorOKReenter;
         DraftSheet.getRange(row, col).setValue("");
       }
-      DraftSheet.getRange(row-numCards+1, col, numCards).setBackgrounds(colors);
+      DraftSheet.getRange(row-numCardsPicked+1, col, numCardsPicked).setBackgrounds(colors);
       infoCell.setValue(errorInfo);
       infoCell.setBackground(errorColor);
       return;
     }
-    DraftSheet.getRange(row-numCards+1, col, numCards).setBackgrounds(colors);
+    DraftSheet.getRange(row-numCardsPicked+1, col, numCardsPicked).setBackgrounds(colors);
     
     //All possible errors have been checked and are OK! Can notify next player, but first mark the picked cards:
-    for(n = numCards-1; n >= 0; n--)
+    for(n = numCardsPicked-1; n >= 0; n--)
     {
       cardPoolBackColor[cardRow[n]][cardCol[n]] = playerColor[col-3];
-      //infoString += ", " + pickedCardNames[n].toString();
     }
     
     CardSheet.getRange(1, 1, maxRow, maxCol).setBackgrounds(cardPoolBackColor);
@@ -392,13 +390,11 @@ function handlePick(){
   else
   { //we go here if isCube = false
     //TODO: Check if newly picked cards have been taken earlier?
-    //      Error might still happen because of different spelling though
+    //      There migh be different spelling though, so probably no point checking
     
-    // For now there are no checks, accept whatever has been entered...
-
-    //update background color of cards that was newly picked
+    //Check that a name was entered in all cells, and that the same name was not entered twize:
     var error = [0,0,0,0];
-    for(n = numCards-1; n >= 0; n--)
+    for(n = numCardsPicked-1; n >= 0; n--)
     {
       if(pickedCardNames[n].toString() == "")
       {
@@ -412,33 +408,35 @@ function handlePick(){
         }
       }
     }
-    var colors = new Array(numCards);
+    
+    //Update color of cells etc:
+    var colors = new Array(numCardsPicked);
     var errorText = "";
-    for(n = numCards-1; n >= 0; n--)
+    for(n = numCardsPicked-1; n >= 0; n--)
     {
-      if(numCards == 1 || n == numCards-1){
+      if(numCardsPicked == 1 || n == numCardsPicked-1){
         infoString += pickedCardNames[n].toString();
       }else if(n > 0){
         infoString += ', '+pickedCardNames[n].toString();
       }else {
-        infoString += ' and '+pickedCardNames[n].toString() + ".";
+        infoString += ' '+and+' '+pickedCardNames[n].toString() + ".";
       }
       colors[n] = new Array(1);
       if (error[n] == 4){
         colors[n][0] = errorColor;
-        errorText += "You forgot to pick a card. ";
+        errorText += errorForgot +". ";
       }
       else if (error[n] == 5){
         colors[n][0] = errorColor;
-        errorText += "You can't pick the same card twize. ";
+        errorText += errorSameCard +". ";
       }
       else {
         colors[n][0] = playerColor[col-3];
       }
     }
-    DraftSheet.getRange(row-numCards+1, col, numCards).setBackgrounds(colors);
+    DraftSheet.getRange(row-numCardsPicked+1, col, numCardsPicked).setBackgrounds(colors);
     if (errorText != ""){
-      errorText += "(You might need to reenter the last card to trigger script again)";
+      errorText += "("+ errorMaybeReenter +")";
       infoCell.setBackground(errorColor);
       infoCell.setValue(errorText);
       return;
@@ -450,10 +448,12 @@ function handlePick(){
     }
   }
   
+  
+  //**************************************************************************
+  //** Logic for sending notifications and update sheet for next player
+  //**************************************************************************
+  
   //Find active player and next player based on which cell has been edited:
-  var nextPlayerEmail = '';
-  var activePlayer = DraftSheet.getSheetValues(6, col, 1, 1)[0][0].toString();
-  var activePlayerEmail = emails[col-3];
   var np = 1337,nr = row;
   if (row >= startRow && row < twoCardRow)//region where we make one pick each
   {
@@ -510,16 +510,22 @@ function handlePick(){
     infoCell.setValue("An error occured !!!!!  row = " + row + " col = " + col);
     return;
   }
-  
+
+  var nextPlayerName = DraftSheet.getSheetValues(6, np+3, 1, 1)[0][0].toString();
+  var nextPlayerEmail = emails[np];
+  var activePlayerName = DraftSheet.getSheetValues(6, col, 1, 1)[0][0].toString();
+  var activePlayerEmail = emails[col-3];
   
   if(draftOver){
     //Mail to all players
     var i = 0;
-    for (i = 0; i < 8; i++){
-      if (emails[i] != ''){
+    for (i = 0; i < 8; i++)
+    {
+      if (notifyFinish[i] && emails[i] != '')
+      {
         MailApp.sendEmail(emails[i],
-                          'Rotisserie Draft Finished',
-                          activePlayer+' just drafted '+infoString+'\n\nLink:\n'+link+'\n\nCubeTutor:\n'+cubetutor);
+                          notifyFinishSubject,
+                          activePlayerName+' '+justPicked+' '+infoString+sheetLink);
       }
     }
     //Update Next Col/Row info:
@@ -532,43 +538,44 @@ function handlePick(){
     npCell.setBackground("white");
   }
   else{
-    var nextPlayerName = DraftSheet.getSheetValues(6, np+3, 1, 1)[0][0].toString();
     
     //mark next cell to be filled in a different color:
     //Handle multiple picks in a row by the same player (up to 4!):
-    var numCards = 1;
+    var numCardsToDraft = 1;
     row = nr;
     col = np+3;
     if (row == lastRow && col == playerColumn[0])
     {
-      numCards = 2;
+      numCardsToDraft = 2;
+      if (twoCardRow > lastRow)
+        numCardsToDraft = 1;
     }
     else if (row > startRow && row < twoCardRow){
       if (col==playerColumn[0] || col ==playerColumn[numPlayers-1]){
-        numCards = 2;
+        numCardsToDraft = 2;
       }
     }
     else if (row == twoCardRow+1 && col == playerColumn[0])
     {
-      numCards = 3;
+      numCardsToDraft = 3;
     }
     else if (row >= twoCardRow && row <= lastRow)
     {
       if (col==playerColumn[0] || col ==playerColumn[numPlayers-1]){
-        numCards = 4;
+        numCardsToDraft = 4;
       }
       else if (col >= playerColumn[1] && col <= playerColumn[numPlayers-2])
       {
-        numCards = 2;
+        numCardsToDraft = 2;
       }
     }
-    var newColor = new Array(numCards);
-    for(n = numCards-1; n >= 0; n--)
+    var newColor = new Array(numCardsToDraft);
+    for(n = numCardsToDraft-1; n >= 0; n--)
     {
       newColor[n] = new Array(1);
       newColor[n][0] = "white";
     }
-    DraftSheet.getRange(row-numCards+1, col, numCards).setBackgrounds(newColor);
+    DraftSheet.getRange(row-numCardsToDraft+1, col, numCardsToDraft).setBackgrounds(newColor);
     
     //Update Next Col/Row info:
     var ncCell = DraftSheet.getRange("C51");
@@ -579,23 +586,121 @@ function handlePick(){
     npCell.setValue(nextPlayerName);
     npCell.setBackground(playerColor[np]);
     
-    //Notification stuff:
-    nextPlayerEmail = emails[np];
+
+    //Logic for handling pick history
+    var draftHistory = DraftSheet.getRange(startRow, 13, numPlayers*4, 2).getValues();
+    var updatedHistory = DraftSheet.getRange(startRow, 13, numPlayers*4, 2).getValues();
+    var prevPickInfo = "";
+  
+    //Find last time next player made a pick (if any)
+    //All parts of the history after that point should be added to the previous pick info
+    //If this is the first pick of that player, all picks so far shall be added
+    //At the same time, set up the updated history (remove oldest picks, add newest).
+    var historyName = "Balle";
+    var historyLength = 0;
+    var firstCards = 0;
+    var firstName = draftHistory[0][0];
+    var onFirst = true;
+    var lastR = 0;
+    for(r = 0; r < numPlayers*4; r++)
+    {
+      if (draftHistory[r][0] == "")
+      {
+        lastR = r;
+        break;//no more historic picks available...
+      }
+
+      if (draftHistory[r][0] != historyName)
+      {
+        if (historyName == firstName)
+          onFirst = false;
+        historyLength += 1;
+        historyName = draftHistory[r][0];
+        if(draftHistory[r][0] == nextPlayerName)
+        {
+          prevPickInfo = "";
+        }
+        else
+        {
+          prevPickInfo += '\n'+historyName+': '+draftHistory[r][1];
+        }
+      }
+      else
+      {
+        if(draftHistory[r][0] == draftHistory[r+1][0])
+          prevPickInfo += ', '+draftHistory[r][1];
+        else
+          prevPickInfo += ' '+and+' '+draftHistory[r][1];
+      }
+      
+      if (onFirst && draftHistory[r][0] == firstName)
+      {
+        firstCards += 1
+      }
+      else
+      {
+        updatedHistory[r-firstCards] = draftHistory[r];
+      }
+    }
+    prevPickInfo += '\n'+activePlayerName + ": ";
+    var separator = ['',
+                     ', ',
+                     ', ',
+                     ' '+and+' '];
+    if(numCardsPicked > 1)
+      separator[numCardsPicked-1] = ' '+and+' ';
+    if(historyLength < ((numPlayers*2)-4))
+    {
+      for (n = 0; n < numCardsPicked; n++)
+      {
+        draftHistory[lastR + n][0] = activePlayerName;
+        draftHistory[lastR + n][1] = pickedCardNames[n];
+        prevPickInfo += separator[n]+pickedCardNames[n];
+      }
+      DraftSheet.getRange(startRow, 13, numPlayers*4, 2).setValues(draftHistory);
+    }
+    else
+    {
+      for (n = 0; n < firstCards; n++)
+      {
+        updatedHistory[lastR + n-firstCards][0] = '';
+        updatedHistory[lastR + n-firstCards][1] = '';
+      }
+      for (n = 0; n < numCardsPicked; n++)
+      {
+        updatedHistory[lastR + n-firstCards][0] = activePlayerName;
+        updatedHistory[lastR + n-firstCards][1] = pickedCardNames[n];
+        prevPickInfo += separator[n]+pickedCardNames[n];
+      }
+      DraftSheet.getRange(startRow, 13, numPlayers*4, 2).setValues(updatedHistory);
+    }
+
 
     //Mail to next player:
-    if(nextPlayerEmail != ""){
-      MailApp.sendEmail(nextPlayerEmail,
-                        'Your turn in Rotisserie Draft',
-                        activePlayer+' just drafted '+infoString+'\n\nLink:\n'+link+'\n\nCubeTutor:\n'+cubetutor);
+    if(notifyTurn[np] && nextPlayerEmail != "")
+    {
+      if(includeAll[np])
+      {
+        MailApp.sendEmail(nextPlayerEmail,
+                          notifyTurnSubject,
+                          sinceLast+prevPickInfo+sheetLink+cubeLink);
+      }
+      else
+      {
+        MailApp.sendEmail(nextPlayerEmail,
+                          notifyTurnSubject,
+                          activePlayerName+' '+justPicked+' '+infoString+sheetLink+cubeLink);
+      }
     }
     
     //Mail to other players about changes:
     var i = 0;
     for (i = 0; i < 8; i++){
-      if (notifyAll[i] && emails[i] != "" && nextPlayerEmail != emails[i] && emails[i] != activePlayerEmail){
+      if (notifyAll[i] && emails[i] != "" && nextPlayerEmail != emails[i] && emails[i] != activePlayerEmail)
+      {
         MailApp.sendEmail(emails[i],
-                          'Rotisserie Draft Update',
-                          activePlayer+' just drafted '+infoString+'\n\n'+nextPlayerName+' is next.\n\nLink:\n'+link+'\n\nCubeTutor:\n'+cubetutor);
+                          notifyAllSubject,
+                          activePlayerName+' '+justPicked+' '+infoString+'\n\n'+nextPlayerName+' '+isNext+sheetLink);
       }
     }  
   }
