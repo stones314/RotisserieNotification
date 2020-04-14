@@ -162,7 +162,6 @@ function handlePick(){
     }
     CardSheet.getRange(19, 10, 8).setValues(playerRef);
     CardSheet.getRange(19, 10, 8).setBackgrounds(playerRefBG);
-    CardSheet.getRange("J3").setValue(cube);
     
     //SetupSheet:
     resetCells[0][0] = false;
@@ -590,7 +589,7 @@ function handlePick(){
     //Logic for handling pick history
     var draftHistory = DraftSheet.getRange(startRow, 13, numPlayers*4, 2).getValues();
     var updatedHistory = DraftSheet.getRange(startRow, 13, numPlayers*4, 2).getValues();
-    var prevPickInfo = "";
+    var prevPickInfo = "\n";
   
     //Find last time next player made a pick (if any)
     //All parts of the history after that point should be added to the previous pick info
@@ -618,19 +617,19 @@ function handlePick(){
         historyName = draftHistory[r][0];
         if(draftHistory[r][0] == nextPlayerName)
         {
-          prevPickInfo = "";
+          prevPickInfo = "\n";
         }
         else
         {
-          prevPickInfo += '\n'+historyName+': '+draftHistory[r][1];
+          prevPickInfo += '\n'+historyName+':\n\t'+draftHistory[r][1];
         }
       }
       else
       {
         if(draftHistory[r][0] == draftHistory[r+1][0])
-          prevPickInfo += ', '+draftHistory[r][1];
+          prevPickInfo += '\n\t'+draftHistory[r][1];
         else
-          prevPickInfo += ' '+and+' '+draftHistory[r][1];
+          prevPickInfo += '\n\t'+draftHistory[r][1];
       }
       
       if (onFirst && draftHistory[r][0] == firstName)
@@ -642,11 +641,11 @@ function handlePick(){
         updatedHistory[r-firstCards] = draftHistory[r];
       }
     }
-    prevPickInfo += '\n'+activePlayerName + ": ";
-    var separator = ['',
-                     ', ',
-                     ', ',
-                     ' '+and+' '];
+    prevPickInfo += '\n'+activePlayerName + ":";
+    var separator = ['\n\t',
+                     '\n\t',
+                     '\n\t',
+                     '\n\t'];
     if(numCardsPicked > 1)
       separator[numCardsPicked-1] = ' '+and+' ';
     if(historyLength < ((numPlayers*2)-4))
